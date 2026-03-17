@@ -1,0 +1,325 @@
+@import "tailwindcss";
+
+:root {
+  /* 8pt grid + 美拉德配色（温暖烘焙感） */
+  --grid: 8px;
+
+  --bg: #fbf2e7; /* 奶油杏 */
+  --panel: #fff8f0; /* 浅奶咖 */
+  --ink: #2a1c12; /* 深可可 */
+  --muted: #6b4f3b; /* 焦糖棕 */
+
+  --brand: #b45309; /* 焦糖橙 */
+  --brand-2: #7c2d12; /* 栗棕 */
+  --ring: rgba(180, 83, 9, 0.35);
+  --border: rgba(42, 28, 18, 0.12);
+
+  --shadow: 0 16px 40px rgba(42, 28, 18, 0.18);
+
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+
+  --s1: calc(var(--grid) * 1);  /* 8 */
+  --s2: calc(var(--grid) * 2);  /* 16 */
+  --s3: calc(var(--grid) * 3);  /* 24 */
+  --s4: calc(var(--grid) * 4);  /* 32 */
+  --s5: calc(var(--grid) * 5);  /* 40 */
+  --s6: calc(var(--grid) * 6);  /* 48 */
+
+  --font-song: "SimSun", "宋体", "NSimSun", "Songti SC", "STSong",
+    "Noto Serif SC", serif;
+}
+
+/* 为了兼容常见 CSS linter，这里不用 @theme，直接用标准变量。 */
+:root {
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-song);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a120c;
+    --panel: #20150f;
+    --ink: #f6e7d6;
+    --muted: #d6bca5;
+
+    --brand: #f59e0b;
+    --brand-2: #fb7185;
+    --ring: rgba(245, 158, 11, 0.35);
+    --border: rgba(246, 231, 214, 0.14);
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  }
+}
+
+body {
+  background: radial-gradient(
+      1200px 800px at 20% 10%,
+      rgba(180, 83, 9, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 650px at 90% 20%,
+      rgba(124, 45, 18, 0.14),
+      transparent 55%
+    ),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--font-song);
+  letter-spacing: 0.2px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(180, 83, 9, 0.22);
+}
+
+/* Dashboard primitives (8pt spacing) */
+.dash {
+  min-height: 100vh;
+  padding: var(--s4);
+}
+
+.shell {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s3);
+}
+
+@media (min-width: 960px) {
+  .shell {
+    grid-template-columns: 1fr 3fr; /* 左 1/4，右 3/4 */
+    gap: var(--s4);
+    align-items: start;
+  }
+}
+
+.card {
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: clip;
+}
+
+.cardHeader {
+  padding: var(--s3) var(--s3) var(--s2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--muted);
+}
+
+.cardBody {
+  padding: var(--s3);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+  user-select: none;
+}
+
+.btn:hover {
+  background: color-mix(in srgb, var(--panel) 78%, transparent);
+  border-color: color-mix(in srgb, var(--border) 70%, var(--brand) 30%);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnPrimary {
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand) 22%, var(--panel)),
+    color-mix(in srgb, var(--brand-2) 12%, var(--panel))
+  );
+}
+
+.btnDanger {
+  border-color: color-mix(in srgb, #fb7185 40%, var(--border));
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--ink);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  outline: none;
+  box-shadow: 0 0 0 0 var(--ring);
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+  font-family: var(--font-song);
+}
+
+.textarea {
+  min-height: calc(var(--grid) * 12);
+  resize: none;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  border-color: color-mix(in srgb, var(--brand) 50%, var(--border));
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.chatWrap {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: calc(100vh - var(--s4) * 2);
+}
+
+.messages {
+  padding: var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  overflow: auto;
+}
+
+.msgRow {
+  display: flex;
+  gap: var(--s2);
+  align-items: flex-end;
+}
+
+.msgRow.me {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: min(560px, 86%);
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+}
+
+.bubble.me {
+  background: linear-gradient(
+    180deg,
+    rgba(180, 83, 9, 0.18),
+    rgba(124, 45, 18, 0.12)
+  );
+  border-color: color-mix(in srgb, var(--brand) 24%, var(--border));
+}
+
+.msgMeta {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.composer {
+  padding: var(--s3);
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: var(--s2);
+}
+
+.composerRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s2);
+}
+
+@media (min-width: 640px) {
+  .composerRow {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbarLeft {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1);
+  align-items: center;
+}
+
+.toast {
+  position: fixed;
+  right: var(--s3);
+  bottom: var(--s3);
+  width: min(420px, calc(100vw - var(--s3) * 2));
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 26%, var(--border));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: var(--s3);
+  z-index: 50;
+}
+
+.toastTitle {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.toastBody {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 20px;
+}
