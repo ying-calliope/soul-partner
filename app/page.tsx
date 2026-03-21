@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 
 type ChatRole = "me" | "assistant" | "system";
 
@@ -42,6 +43,10 @@ function safeHasWebSpeech() {
   };
   return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition);
 }
+
+const DigitalHumanModule = dynamic(() => import("./components/DigitalHumanModule"), {
+  ssr: false,
+});
 
 export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -518,23 +523,7 @@ export default function Home() {
             </div>
           </div>
           <div className="cardBody">
-            <div className="muted" style={{ lineHeight: "24px" }}>
-              这里将用于后续接入数字人（视频/3D/Canvas/RTC）。
-            </div>
-            <div
-              style={{
-                marginTop: "16px",
-                height: "520px",
-                borderRadius: "16px",
-                border: "1px dashed var(--border)",
-                background:
-                  "linear-gradient(135deg, rgba(180,83,9,.10), rgba(124,45,18,.06))",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <div className="muted">数字人占位画面</div>
-            </div>
+            <DigitalHumanModule />
           </div>
         </section>
 
