@@ -55,6 +55,7 @@ export default function Home() {
   const [draft, setDraft] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceHint, setVoiceHint] = useState<string | null>(null);
   const [isPolishingVoice, setIsPolishingVoice] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [imageMode, setImageMode] = useState<"describe" | "ocr" | "advice">("describe");
@@ -124,7 +125,18 @@ export default function Home() {
       webkitSpeechRecognition?: any;
     };
     const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!SR) return;
+    const insecure =
+      !window.isSecureContext &&
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1";
+    if (insecure) {
+      setVoiceHint("当前地址不是安全上下文（HTTPS/localhost），语音识别可能不可用。");
+    }
+    if (!SR) {
+      setVoiceHint("当前浏览器不支持语音识别 API（建议 Chrome/Edge 最新版，并使用 localhost 或 HTTPS）。");
+      return;
+    }
+    setVoiceHint(null);
     const rec = new SR();
     rec.lang = "zh-CN";
     rec.interimResults = true;
@@ -143,7 +155,20 @@ export default function Home() {
       setDraft(`${voiceBaseDraftRef.current}${voiceFinalRef.current}${voiceInterimRef.current}`);
     };
     rec.onerror = (e: any) => {
-      setVoiceError(e?.error ? `语音识别失败：${e.error}` : "语音识别失败");
+      const code = String(e?.error || "");
+      const mapped =
+        code === "not-allowed"
+          ? "麦克风权限被拒绝，请在浏览器地址栏中允许麦克风。"
+          : code === "service-not-allowed"
+            ? "浏览器语音服务不可用，请尝试切换网络或浏览器。"
+            : code === "audio-capture"
+              ? "未检测到可用麦克风设备。"
+              : code === "network"
+                ? "语音识别网络异常，请检查网络后重试。"
+                : code
+                  ? `语音识别失败：${code}`
+                  : "语音识别失败";
+      setVoiceError(mapped);
       setIsListening(false);
     };
     rec.onend = () => {
@@ -198,6 +223,31 @@ export default function Home() {
     };
     recognitionRef.current = rec;
   }, []);
+
+  async function ensureMicPermission() {
+    if (typeof navigator === "undefined") return true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setVoiceError("浏览器不支持麦克风权限接口，请更换浏览器后重试。");
+      return false;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+      return true;
+    } catch (e: any) {
+      const name = String(e?.name || "");
+      const msg =
+        name === "NotAllowedError"
+          ? "你拒绝了麦克风权限，请在浏览器中允许后再试。"
+          : name === "NotFoundError"
+            ? "未找到麦克风设备，请检查硬件与系统设置。"
+            : e?.message
+              ? `麦克风权限检查失败：${e.message}`
+              : "麦克风权限检查失败";
+      setVoiceError(msg);
+      return false;
+    }
+  }
 
   function pushMessage(msg: Omit<ChatMessage, "id" | "createdAt">) {
     setMessages((prev) => [
@@ -318,7 +368,7 @@ export default function Home() {
     synth.speak(u);
   }
 
-  function toggleListen() {
+  async function toggleListen() {
     setVoiceError(null);
     const rec = recognitionRef.current;
     if (!rec) {
@@ -335,6 +385,8 @@ export default function Home() {
       return;
     }
     try {
+      const ok = await ensureMicPermission();
+      if (!ok) return;
       polishingAbortRef.current?.abort();
       setIsPolishingVoice(false);
       voiceBaseDraftRef.current = draft ? `${draft.trimEnd()}${draft.endsWith("\n") ? "" : "\n"}` : "";
@@ -509,6 +561,14 @@ export default function Home() {
                 </div>
               </div>
             ) : null}
+            {!voiceError && voiceHint ? (
+              <div className="msgRow">
+                <div className="bubble">
+                  <div style={{ fontWeight: 700 }}>语音诊断</div>
+                  <div className="msgMeta">{voiceHint}</div>
+                </div>
+              </div>
+            ) : null}
 
             {messages.map((m) => (
               <div
@@ -616,7 +676,9 @@ export default function Home() {
               />
               <button
                 className={`btn ${isListening ? "btnPrimary" : ""}`}
-                onClick={toggleListen}
+                onClick={() => {
+                  void toggleListen();
+                }}
                 type="button"
                 aria-pressed={isListening}
                 aria-label={isListening ? "停止语音识别" : "开始语音识别"}
