@@ -87,7 +87,8 @@ body {
 }
 
 .shell {
-  width: min(1200px, 100%);
+  /* 原 1200px + 左侧加宽约 150px，右侧列宽与原先 1fr:3fr 下接近 */
+  width: min(1350px, 100%);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr;
@@ -95,11 +96,68 @@ body {
 }
 
 @media (min-width: 960px) {
-  .shell {
-    grid-template-columns: 1fr 3fr; /* 左 1/4，右 3/4 */
-    gap: var(--s4);
-    align-items: start;
+  /* 整页高度锁在视口内，避免右侧聊天撑长页面导致左侧数字人被“顶出视野” */
+  .dash {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
   }
+
+  .shell {
+    /* 1fr : 2fr 等价于在总宽约 1350 时左≈450、右≈900，与原先 1200 宽时右列接近 */
+    grid-template-columns: 1fr 2fr;
+    gap: var(--s4);
+    align-items: stretch;
+    height: 100%;
+    min-height: 0;
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  /* grid 子项默认 min-height:auto 会阻止中间区收缩，必须置 0 才能让内部滚动生效 */
+  .shell > .card {
+    min-height: 0;
+    max-height: 100%;
+  }
+
+  .shell > .card:not(.chatWrap) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .shell > .card:not(.chatWrap) .cardBody {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+/* 数字人：在左侧卡片内占满剩余高度，避免固定像素导致要下拉 */
+.digitalHumanRoot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 10px;
+}
+
+.digitalHumanCanvasHost {
+  flex: 1;
+  min-height: 0;
+  border-radius: 16px;
+  border: 1px dashed var(--border);
+  background: linear-gradient(
+    135deg,
+    rgba(180, 83, 9, 0.1),
+    rgba(124, 45, 18, 0.06)
+  );
+  overflow: hidden;
+  position: relative;
+}
+
+.digitalHumanFooter {
+  flex-shrink: 0;
 }
 
 .card {
@@ -200,7 +258,9 @@ body {
 }
 
 .textarea {
-  min-height: calc(var(--grid) * 12);
+  min-height: calc(var(--grid) * 7);
+  padding-top: 10px;
+  padding-bottom: 10px;
   resize: none;
 }
 
@@ -217,8 +277,18 @@ body {
 
 .chatWrap {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  min-height: calc(100vh - var(--s4) * 2);
+  /* minmax(0,1fr) 允许中间消息区在固定高度卡片内收缩，从而出现内部滚动条 */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: min(520px, 70vh);
+}
+
+@media (min-width: 960px) {
+  .chatWrap {
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+  }
 }
 
 .messages {
@@ -227,6 +297,7 @@ body {
   flex-direction: column;
   gap: var(--s2);
   overflow: auto;
+  min-height: 0;
 }
 
 .msgRow {
@@ -264,10 +335,10 @@ body {
 }
 
 .composer {
-  padding: var(--s3);
+  padding: var(--s2) var(--s3);
   border-top: 1px solid var(--border);
   display: grid;
-  gap: var(--s2);
+  gap: var(--s1);
 }
 
 .composerRow {
@@ -286,7 +357,8 @@ body {
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s1);
+  gap: 6px;
+  row-gap: 4px;
   align-items: center;
   justify-content: space-between;
 }
@@ -294,8 +366,72 @@ body {
 .toolbarLeft {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s1);
+  gap: 6px;
+  row-gap: 4px;
   align-items: center;
+}
+
+/* 聊天区工具条：上传 / 模式 / 表情同一行，整体缩小；窄屏可横向滑动 */
+.composer .composerToolbar {
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.composer .composerToolbarMain {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.composer .composerToolbarMain::-webkit-scrollbar {
+  height: 4px;
+}
+
+.composer .composerToolbarBtn {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 16px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.composer .composerToolbarSelect {
+  width: auto;
+  min-width: 4.5rem;
+  max-width: 5.5rem;
+  padding: 2px 4px 2px 6px;
+  font-size: 12px;
+  line-height: 16px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.composer .composerToolbarStickers {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.composer .composerToolbarSticker {
+  padding: 0 3px;
+  font-size: 14px;
+  line-height: 1.2;
+  border-radius: var(--radius-sm);
+}
+
+.composer .composerToolbarChip {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
 }
 
 .toast {

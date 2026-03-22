@@ -150,20 +150,25 @@ class Viewer {
 
 export default function DigitalHumanModule() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const hostRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const [tips, setTips] = useState("拖拽或上传 VRM 文件，即可启用数字人。");
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const host = hostRef.current;
+    if (!canvas || !host) return;
     const viewer = new Viewer();
     viewerRef.current = viewer;
     viewer.setup(canvas);
 
     const onResize = () => viewer.resize();
     window.addEventListener("resize", onResize);
+    const ro = new ResizeObserver(() => viewer.resize());
+    ro.observe(host);
     return () => {
       window.removeEventListener("resize", onResize);
+      ro.disconnect();
       viewer.dispose();
       viewerRef.current = null;
     };
@@ -187,16 +192,10 @@ export default function DigitalHumanModule() {
   }, []);
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div className="digitalHumanRoot">
       <div
-        style={{
-          height: "520px",
-          borderRadius: "16px",
-          border: "1px dashed var(--border)",
-          background: "linear-gradient(135deg, rgba(180,83,9,.10), rgba(124,45,18,.06))",
-          overflow: "hidden",
-          position: "relative",
-        }}
+        ref={hostRef}
+        className="digitalHumanCanvasHost"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -207,7 +206,7 @@ export default function DigitalHumanModule() {
         <canvas ref={canvasRef} style={{ width: "100%", height: "100%", display: "block" }} />
       </div>
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <div className="digitalHumanFooter" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <label className="btn" style={{ display: "inline-flex", gap: 8 }}>
           上传 VRM
           <input

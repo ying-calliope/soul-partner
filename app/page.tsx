@@ -72,6 +72,8 @@ export default function Home() {
   const [toast, setToast] = useState<{ title: string; body: string } | null>(
     null,
   );
+  /** 必须在首帧与 SSR 一致（false），避免麦克风按钮 hydration 不匹配 */
+  const [hasClientWebSpeech, setHasClientWebSpeech] = useState(false);
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -87,6 +89,10 @@ export default function Home() {
 
   useEffect(() => {
     document.title = "伴你左右";
+  }, []);
+
+  useEffect(() => {
+    setHasClientWebSpeech(safeHasWebSpeech());
   }, []);
 
   useEffect(() => {
@@ -514,7 +520,7 @@ export default function Home() {
   return (
     <div className="dash">
       <div className="shell">
-        {/* 左侧：预留数字人区域（占 1/4） */}
+        {/* 左侧：数字人区域（宽屏与右列约 1:2，总宽约 1350 时右列接近原 1200 下宽度） */}
         <section className="card">
           <div className="cardHeader">
             <div>
@@ -600,10 +606,14 @@ export default function Home() {
           </div>
 
           <div className="composer">
-            <div className="toolbar">
-              <div className="toolbarLeft">
-                <label className="btn" style={{ display: "inline-flex", gap: 8 }}>
-                  上传图片
+            <div className="toolbar composerToolbar">
+              <div className="toolbarLeft composerToolbarMain">
+                <label
+                  className="btn composerToolbarBtn"
+                  title="上传图片"
+                  style={{ display: "inline-flex", gap: 4, alignItems: "center" }}
+                >
+                  图片
                   <input
                     type="file"
                     accept="image/*"
@@ -613,22 +623,22 @@ export default function Home() {
                 </label>
 
                 <select
-                  className="select"
+                  className="select composerToolbarSelect"
                   value={imageMode}
                   onChange={(e) => setImageMode(e.target.value as any)}
                   aria-label="图片处理模式"
-                  style={{ width: 180 }}
+                  title="图片描述 / 提取文字 / 分析建议"
                 >
-                  <option value="describe">图片描述</option>
-                  <option value="ocr">提取文字</option>
-                  <option value="advice">分析建议</option>
+                  <option value="describe">描述</option>
+                  <option value="ocr">读字</option>
+                  <option value="advice">建议</option>
                 </select>
 
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div className="composerToolbarStickers">
                   {stickers.map((s) => (
                     <button
                       key={s}
-                      className="btn"
+                      className="btn composerToolbarSticker"
                       type="button"
                       onClick={() => sendSticker(s)}
                       title="发送表情包"
@@ -639,7 +649,9 @@ export default function Home() {
                 </div>
               </div>
 
-              <span className="chip">待办提醒会在右下角弹出</span>
+              <span className="chip composerToolbarChip" title="待办提醒会在右下角弹出">
+                待办右下角弹出
+              </span>
             </div>
 
             <div className="composerRow">
@@ -672,20 +684,20 @@ export default function Home() {
                 aria-pressed={isListening}
                 aria-label={isListening ? "停止语音识别" : "开始语音识别"}
                 title={
-                  safeHasWebSpeech()
+                  hasClientWebSpeech
                     ? isListening
                       ? "点击停止"
                       : "点击开始"
                     : "浏览器不支持语音识别"
                 }
-                disabled={!safeHasWebSpeech() || isPolishingVoice}
+                disabled={!hasClientWebSpeech || isPolishingVoice}
                 style={{
                   width: "48px",
                   height: "48px",
                   display: "grid",
                   placeItems: "center",
                   borderRadius: "999px",
-                  opacity: !safeHasWebSpeech() ? 0.6 : 1,
+                  opacity: !hasClientWebSpeech ? 0.6 : 1,
                 }}
               >
                 <MicrophoneIcon active={isListening} />
